@@ -4,6 +4,7 @@ const {
 	token,
 } = require('./config.json');
 var youtubedl = require('youtube-dl');
+var fs = require('fs');
 
 const client = new Discord.Client();
 
@@ -63,32 +64,35 @@ client.on('message', async message => {
 
 async function execute(message, serverQueue) {
     const args = message.content.split(' ');
-
-	const voiceChannel = message.member.voiceChannel;
-	if (!voiceChannel) return message.reply('You need to be in a voice channel to play music!').then(message => {message.delete(4000)}).catch();
-	const permissions = voiceChannel.permissionsFor(message.client.user);
-	if (!permissions.has('CONNECT') || !permissions.has('SPEAK')) {
-		return message.channel.send('I need the permissions to join and speak in your voice channel!');
+	if (typeof message.member.voice == 'undefined') {
+		return message.reply('You need to be in a voice channel to play music!').then(message => {message.delete(4000)}).catch();
+	} else {
+		const voiceChannel = message.member.voice.channel;
+		const permissions = voiceChannel.speakable;
+		if (!permissions) {
+			return message.channel.send('I need the permissions to join and speak in your voice channel!');
+		}
 	}
 
 	let song = {
 		title: '',
 		url: '',
 		source: '',
+		fn: ''
 	};
 
-	await youtubedl.getInfo(args[1], ['--format=bestaudio', '--user-agent', '"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.50 Safari/537.36"', '-i', '--no-warnings'], async function(err, info) {
-		if (err) {
-			message.channel.send('Error finding audio').then(message => {message.delete(4000)}).catch();
-			return;
-		}
+	var video = youtubedl(args[1], ['--format=bestaudio', '--user-agent', '"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.50 Safari/537.36"', '-i', '--no-warnings'], {});
+	video.on('info', function(info) {
+		console.log('Download started');
+		console.log('filename: ' + info._filename);
+		console.log('size: ' + info.size);
 		song.title = info.title;
 		song.url = args[1];
-		song.source = info.url.replace('ip=\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\b','ip=106.201.116.246');
-		// console.log(info.url);
-	});
-	await new Promise(done => setTimeout(done, 15000));
-	console.log(song);
+		song.source = info.url;
+		song.fn = 'yee.webm';
+	  });
+	  await video.pipe(fs.createWriteStream('yee.webm'));
+	  await new Promise(done => setTimeout(done, 15000));
 
 	if (!serverQueue) {
 		const queueContruct = {
@@ -107,7 +111,7 @@ async function execute(message, serverQueue) {
 		queueContruct.songs.push(song);
 
 		try {
-			var connection = await voiceChannel.join().then(connection => console.log('Connected!')).catch(console.error);
+			var connection = await voiceChannel.join();
 			queueContruct.connection = connection;
 			play(message.guild, queueContruct.songs[0]);
 		} catch (err) {
@@ -123,13 +127,13 @@ async function execute(message, serverQueue) {
 }
 
 function next(message, serverQueue) {
-	if (!message.member.voiceChannel) return message.reply('You have to be in a voice channel to stop the music!');
+	if (typeof message.member.voice == 'undefined') return message.reply('You have to be in a voice channel to skip a song!');
 	if (!serverQueue) return message.reply('There is no song that I can skip!').then(message => {message.delete(4000)}).catch();
 	serverQueue.connection.dispatcher.end();
 }
 
 function stop(message, serverQueue) {
-	if (!message.member.voiceChannel) return message.reply('You have to be in a voice channel to stop the music!');
+	if (typeof message.member.voice == 'undefined') return message.reply('You have to be in a voice channel to stop the music!');
 	try {
 		serverQueue.songs = [];
 		serverQueue.connection.dispatcher.end();
@@ -149,11 +153,10 @@ function play(guild, song) {
 		return;
 	}
 
-	client.user.setActivity(song.title);
-
-	const broadcast = client.createVoiceBroadcast().playStream(song.source);
-	broadcast.setVolumeLogarithmic(serverQueue.volume / 5);
-	const dispatcher = serverQueue.connection.playBroadcast(broadcast)
+    client.user.setActivity(song.title);
+	
+	let readStream = fs.createReadStream('yee.webm');
+	const dispatcher = serverQueue.connection.play(readStream)
 		.on('end', () => {
 			console.log('Music ended!');
 			client.user.setActivity();
@@ -163,36 +166,25 @@ function play(guild, song) {
 		.on('error', error => {
 			console.error(error);
 		});
-
-	// const dispatcher = serverQueue.connection.playStream(song.source)
-	// 	.on('end', () => {
-	// 		console.log('Music ended!');
-	// 		client.user.setActivity();
-	// 		serverQueue.songs.shift();
-	// 		play(guild, serverQueue.songs[0]);
-	// 	})
-	// 	.on('error', error => {
-	// 		console.error(error);
-	// 	});
 	dispatcher.setVolumeLogarithmic(serverQueue.volume / 5);
 }
 
 function pause(message, serverQueue) {
-    if (!message.member.voiceChannel) return message.reply('You have to be in a voice channel to pause the music!').then(message => {message.delete(4000)}).catch();
+    if (typeof message.member.voice == 'undefined') return message.reply('You have to be in a voice channel to pause the music!').then(message => {message.delete(4000)}).catch();
     if (!serverQueue) return message.reply('There is no song that I can pause!').then(message => {message.delete(4000)}).catch();
     
     serverQueue.connection.dispatcher.pause();
 }
 
 function resume(message, serverQueue) {
-    if (!message.member.voiceChannel) return message.reply('You have to be in a voice channel to resume the music!').then(message => {message.delete(4000)}).catch();
+    if (typeof message.member.voice == 'undefined') return message.reply('You have to be in a voice channel to resume the music!').then(message => {message.delete(4000)}).catch();
     if (!serverQueue) return message.reply('There is no song that I could resume!').then(message => {message.delete(4000)}).catch();
     
     serverQueue.connection.dispatcher.resume();
 }
 
 function displayQueue(message, serverQueue) {
-	if (!message.member.voiceChannel) return message.reply('You have to be in a voice channel to stop the music!').then(message => {message.delete(4000)}).catch();
+	if (typeof message.member.voice == 'undefined') return message.reply('You have to be in a voice channel to stop the music!').then(message => {message.delete(4000)}).catch();
 	
 	let queueStr = '';
     for (const song of Object.entries(serverQueue.songs)) {
@@ -204,7 +196,7 @@ function displayQueue(message, serverQueue) {
 function skipTo(message, serverQueue) {
     const args = message.content.split(' ');
 
-	if (!message.member.voiceChannel) return message.reply('You have to be in a voice channel to stop the music!').then(message => {message.delete(4000)}).catch();
+	if (typeof message.member.voice == 'undefined') return message.reply('You have to be in a voice channel to stop the music!').then(message => {message.delete(4000)}).catch();
     
     let count = 1;
     while (count < args[1]) {
