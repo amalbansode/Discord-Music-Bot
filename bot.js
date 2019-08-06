@@ -3,6 +3,7 @@ const {
 	prefix,
 	token,
 } = require('./config.json');
+
 var youtubedl = require('youtube-dl');
 
 const client = new Discord.Client();
@@ -48,7 +49,7 @@ client.on('message', async message => {
 	} else if (message.content.startsWith(`${prefix}resume`)) {
 		resume(message, serverQueue);
 		return;
-	} else if (message.content.startsWith(`${prefix}search`)) {
+	} else if (message.content.startsWith(`${prefix}search`)) { // WIP - Don't try yet
 		search(message, serverQueue);
 		return;
 	} else if (message.content.startsWith(`${prefix}hail`)) {
@@ -164,16 +165,6 @@ function play(guild, song) {
 			console.error(error);
 		});
 
-	// const dispatcher = serverQueue.connection.playStream(song.source)
-	// 	.on('end', () => {
-	// 		console.log('Music ended!');
-	// 		client.user.setActivity();
-	// 		serverQueue.songs.shift();
-	// 		play(guild, serverQueue.songs[0]);
-	// 	})
-	// 	.on('error', error => {
-	// 		console.error(error);
-	// 	});
 	dispatcher.setVolumeLogarithmic(serverQueue.volume / 5);
 }
 
@@ -213,6 +204,8 @@ function skipTo(message, serverQueue) {
     }
 }
 
+
+// WIP 
 function search(message, serverQueue) {
 	const query = '\"' + message.content.split(' ')[1] + '\"';
 	let modifiedMessage = message;
