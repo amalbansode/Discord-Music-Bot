@@ -7,7 +7,7 @@
 	"url": "http://amalbansode.com",
 	"license": "GPL-3.0-or-later",
 	"dependencies": {
-		"discord.js": "^11.5.1",
+		"discord.js": "github:discordjs/discord.js",
 		"ffmpeg-binaries": "^4.0.0",
 		"forever": "^1.0.0",
 		"opusscript": "0.0.6",
