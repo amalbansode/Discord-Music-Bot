@@ -5,6 +5,7 @@ const {
 	prefix,
 	token,
 } = require('./config.json');
+
 var youtubedl = require('youtube-dl');
 var fs = require('fs');
 
@@ -51,7 +52,7 @@ client.on('message', async message => {
 	} else if (message.content.startsWith(`${prefix}resume`)) {
 		resume(message, serverQueue);
 		return;
-	} else if (message.content.startsWith(`${prefix}search`)) {
+	} else if (message.content.startsWith(`${prefix}search`)) { // WIP - Don't try yet
 		search(message, serverQueue);
 		return;
 	} else if (message.content.startsWith(`${prefix}hail`)) {
@@ -206,6 +207,8 @@ function skipTo(message, serverQueue) {
     }
 }
 
+
+// WIP 
 function search(message, serverQueue) {
 	const query = '\"' + message.content.split(' ')[1] + '\"';
 	let modifiedMessage = message;
