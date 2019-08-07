@@ -60,41 +60,40 @@ client.on('message', async message => {
 		execute(message, serverQueue);
 		return;
 	} else {
-		message.reply('Invalid command').then(message => {message.delete(4000)}).catch();
+		message.reply('Invalid command').then(message => {message.delete({timeout: 5000})}).catch();
 	}
 
 });
 
 async function execute(message, serverQueue) {
     const args = message.content.split(' ');
-	if (typeof message.member.voice == 'undefined') {
-		return message.reply('You need to be in a voice channel to play music!').then(message => {message.delete(4000)}).catch();
+	if (!!!message.member.voice.channel) {
+		return message.reply('You need to be in a voice channel to play music!').then(message => {message.delete({timeout: 5000})}).catch();
 	}
 	const voiceChannel = message.member.voice.channel;
 	const permissions = voiceChannel.speakable;
-	if (!permissions) {
-		return message.channel.send('I need the permissions to join and speak in your voice channel!');
-	}
+	if (!permissions) return message.channel.send('I need the permissions to join and speak in your voice channel!');
 
 	let song = {
 		title: '',
 		url: '',
 		source: '',
-		fn: ''
+		duration: ''
 	};
 
-	var video = youtubedl(args[1], ['--format=bestaudio', '--user-agent', '"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.50 Safari/537.36"', '-i', '--no-warnings'], {});
+	var video = youtubedl(
+		args[1], 
+		['--format=bestaudio', '--user-agent', '"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.50 Safari/537.36"', '-i', '--no-warnings'], 
+		{});
 	video.on('info', function(info) {
-		console.log('Download started');
-		console.log('filename: ' + info._filename);
-		console.log('size: ' + info.size);
 		song.title = info.title;
 		song.url = args[1];
 		song.source = info.url;
-		song.fn = 'yee.webm';
-	  });
-	  await video.pipe(fs.createWriteStream('yee.webm'));
-	  await new Promise(done => setTimeout(done, 15000));
+		song.duration = info.duration;
+		console.log('Fetched details for ' + song.title);
+	});
+
+	await new Promise(done => setTimeout(done, 5000));
 
 	if (!serverQueue) {
 		const queueContruct = {
@@ -106,7 +105,7 @@ async function execute(message, serverQueue) {
 			playing: true,
 		};
 
-		message.channel.send(`Queue initiated with ${song.title}!`).then(message => {message.delete(4000)}).catch();
+		message.channel.send(`Queue initiated with ${song.title}! Duration: ${song.duration}`).then(message => {message.delete({timeout: 10000})}).catch();
 
 		queue.set(message.guild.id, queueContruct);
 
@@ -123,14 +122,14 @@ async function execute(message, serverQueue) {
 		}
 	} else {
 		serverQueue.songs.push(song);
-		return message.reply(`${song.title} has been added to the queue!`).then(message => {message.delete(4000)}).catch();
+		return message.reply(`${song.title} has been added to the queue! Duration: ${song.duration}`).then(message => {message.delete({timeout: 10000})}).catch();
 	}
 
 }
 
 function next(message, serverQueue) {
 	if (typeof message.member.voice == 'undefined') return message.reply('You have to be in a voice channel to skip a song!');
-	if (!serverQueue) return message.reply('There is no song that I can skip!').then(message => {message.delete(4000)}).catch();
+	if (!serverQueue) return message.reply('There is no song that I can skip!').then(message => {message.delete({timeout: 5000})}).catch();
 	serverQueue.connection.dispatcher.end();
 }
 
@@ -141,7 +140,7 @@ function stop(message, serverQueue) {
 		serverQueue.connection.dispatcher.end();
 	} catch (err) {
 		console.log(err);
-		return message.reply('Unable to stop playback.').then(message => {message.delete(4000)}).catch();
+		return message.reply('Unable to stop playback.').then(message => {message.delete({timeout: 5000})}).catch();
 	}
 }
 
@@ -157,7 +156,6 @@ function play(guild, song) {
 
     client.user.setActivity(song.title);
 	
-	let readStream = fs.createReadStream('yee.webm');
 	const dispatcher = serverQueue.connection.play(song.source)
 		.on('end', () => {
 			console.log('Music ended!');
@@ -172,21 +170,21 @@ function play(guild, song) {
 }
 
 function pause(message, serverQueue) {
-    if (typeof message.member.voice == 'undefined') return message.reply('You have to be in a voice channel to pause the music!').then(message => {message.delete(4000)}).catch();
-    if (!serverQueue) return message.reply('There is no song that I can pause!').then(message => {message.delete(4000)}).catch();
+    if (typeof message.member.voice == 'undefined') return message.reply('You have to be in a voice channel to pause the music!').then(message => {message.delete({timeout: 5000})}).catch();
+    if (!serverQueue) return message.reply('There is no song that I can pause!').then(message => {message.delete({timeout: 5000})}).catch();
     
     serverQueue.connection.dispatcher.pause();
 }
 
 function resume(message, serverQueue) {
-    if (typeof message.member.voice == 'undefined') return message.reply('You have to be in a voice channel to resume the music!').then(message => {message.delete(4000)}).catch();
-    if (!serverQueue) return message.reply('There is no song that I could resume!').then(message => {message.delete(4000)}).catch();
+    if (typeof message.member.voice == 'undefined') return message.reply('You have to be in a voice channel to resume the music!').then(message => {message.delete({timeout: 5000})}).catch();
+    if (!serverQueue) return message.reply('There is no song that I could resume!').then(message => {message.delete({timeout: 5000})}).catch();
     
     serverQueue.connection.dispatcher.resume();
 }
 
 function displayQueue(message, serverQueue) {
-	if (typeof message.member.voice == 'undefined') return message.reply('You have to be in a voice channel to stop the music!').then(message => {message.delete(4000)}).catch();
+	if (typeof message.member.voice == 'undefined') return message.reply('You have to be in a voice channel to stop the music!').then(message => {message.delete({timeout: 5000})}).catch();
 	
 	let queueStr = '';
     for (const song of Object.entries(serverQueue.songs)) {
@@ -198,7 +196,7 @@ function displayQueue(message, serverQueue) {
 function skipTo(message, serverQueue) {
     const args = message.content.split(' ');
 
-	if (typeof message.member.voice == 'undefined') return message.reply('You have to be in a voice channel to stop the music!').then(message => {message.delete(4000)}).catch();
+	if (typeof message.member.voice == 'undefined') return message.reply('You have to be in a voice channel to stop the music!').then(message => {message.delete({timeout: 5000})}).catch();
     
     let count = 1;
     while (count < args[1]) {
@@ -217,7 +215,7 @@ function search(message, serverQueue) {
 youtubedl.exec(query, ['--default-search', '\"ytsearch1:\"', '--flat-playlist', '-j'], {}, function(err, output) {
 		if (err) {
 			throw err;
-			message.channel.send('Error finding audio').then(message => {message.delete(4000)}).catch();
+			message.channel.send('Error finding audio').then(message => {message.delete({timeout: 5000})}).catch();
 			return;
 		}
 		console.log('here2!');
