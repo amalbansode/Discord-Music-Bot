@@ -1,3 +1,5 @@
+require('dotenv').config()
+
 const Discord = require('discord.js');
 const {
 	prefix,
@@ -66,12 +68,11 @@ async function execute(message, serverQueue) {
     const args = message.content.split(' ');
 	if (typeof message.member.voice == 'undefined') {
 		return message.reply('You need to be in a voice channel to play music!').then(message => {message.delete(4000)}).catch();
-	} else {
-		const voiceChannel = message.member.voice.channel;
-		const permissions = voiceChannel.speakable;
-		if (!permissions) {
-			return message.channel.send('I need the permissions to join and speak in your voice channel!');
-		}
+	}
+	const voiceChannel = message.member.voice.channel;
+	const permissions = voiceChannel.speakable;
+	if (!permissions) {
+		return message.channel.send('I need the permissions to join and speak in your voice channel!');
 	}
 
 	let song = {
@@ -156,7 +157,7 @@ function play(guild, song) {
     client.user.setActivity(song.title);
 	
 	let readStream = fs.createReadStream('yee.webm');
-	const dispatcher = serverQueue.connection.play(readStream)
+	const dispatcher = serverQueue.connection.play(song.source)
 		.on('end', () => {
 			console.log('Music ended!');
 			client.user.setActivity();
@@ -222,4 +223,4 @@ youtubedl.exec(query, ['--default-search', '\"ytsearch1:\"', '--flat-playlist', 
 	});
 }
 
-client.login(token);
+client.login(process.env.TOKEN);
