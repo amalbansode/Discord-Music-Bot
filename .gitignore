@@ -62,3 +62,5 @@ typings/
 
 # stream files
 *.webm
+.DS_Store
+*.webm
