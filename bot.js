@@ -6,6 +6,7 @@ const {
 	token,
 } = require('./config.json');
 
+const ytSearch = require('yt-search')
 var youtubedl = require('youtube-dl');
 var fs = require('fs');
 
@@ -54,7 +55,7 @@ client.on('message', async message => {
 	} else if (message.content.startsWith(`${prefix}resume`)) {
 		resume(message, serverQueue);
 		return;
-	} else if (message.content.startsWith(`${prefix}search`)) { // WIP - Don't try yet
+	} else if (message.content.startsWith(`${prefix}search`)) {
 		search(message, serverQueue);
 		return;
 	} else if (message.content.startsWith(`${prefix}hail`)) {
@@ -169,11 +170,9 @@ async function play(guild, song, video, message) {
 	}
 
     client.user.setActivity(song.title);
-    console.log(typeof song.duration);
+
     durationParts = song.duration.split(':');
-
     let rawDuration = 0;
-
     if (durationParts.length == 3) rawDuration = (Number(durationParts[0]) * 3600000) + (Number(durationParts[1]) * 60000) + (Number(durationParts[2]) * 1000);
     else if (durationParts.length == 2) rawDuration = (Number(durationParts[0]) * 60000) + (Number(durationParts[1]) * 1000);
     else if (durationParts.length == 1) rawDuration = (Number(durationParts[0]) * 1000);
@@ -241,23 +240,23 @@ function skipTo(message, serverQueue) {
 	}
 }
 
+async function search(message, serverQueue) {
+	const query = message.content.substr(message.content.indexOf(' ')+1);
 
-// WIP 
-function search(message, serverQueue) {
-	const query = message.content.split(' ')[1];
-	let modifiedMessage = message;
-	console.log('here1!');
+	message.channel.send(`Searching YouTube for ${query}`).then(message => {message.delete({timeout: 5000})}).catch();
 
-	youtubedl.exec([`\"ytsearch:${query}\"`, '--flat-playlist', '-j'], function(err, output) {
-		if (err) {
-			throw err;
-			message.channel.send('Error finding audio').then(message => {message.delete({timeout: 5000})}).catch();
-			return;
-		}
-		console.log('here2!');
-		modifiedMessage.content = '!play https://www.youtube.com/watch/v=' + output["url"];
-		execute(modifiedMessage, serverQueue);
+	let results = [];
+
+	ytSearch(query, function (err, r) {
+		if ( err ) throw err
+
+		results = r.videos; // Array with each item corresponding to a video.
 	});
+	await new Promise(done => setTimeout(done, 5000));
+
+	let modifiedMessage = message;
+	modifiedMessage.content = '!play https://www.youtube.com/watch/?v=' + results[0].videoId;
+	execute(modifiedMessage, serverQueue);
 }
 
 client.login(process.env.TOKEN);
