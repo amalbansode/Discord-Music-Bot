@@ -2,7 +2,7 @@
 	"name": "University of Michigan Music Bot",
 	"version": "2.1.0",
 	"description": "Music player bot",
-	"main": "node server.js",
+	"main": "bot.js",
 	"author": "Amal Bansode",
 	"url": "http://amalbansode.com",
 	"license": "MIT",
@@ -17,6 +17,6 @@
 		"yt-search": "^0.4.1"
 	},
 	"engines": {
-		"node": ">=8.0.0"
+		"node": ">=10.0.0"
 	}
 }
