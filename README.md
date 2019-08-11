@@ -59,13 +59,14 @@ This bot requires Node.js to be installed on your system, along with several dep
 9. In the Discord chat window for this server, join a voice channel and test the various commands to verify that everything works correctly.
 
 ## Features
-The bot can stream audio from numerous sources, but is primarily intended to stream from YouTube. At the moment, you can:
+The bot can stream audio from numerous sources, but is primarily intended to stream from YouTube. At the moment, you can: (`~` is the default prefix, but this can be modified in `config.json`)
 
 - [X] Play audio from a YouTube or Soundcloud video (playlist support coming soon!): `~play <URL>`
-- [X] Pause and resume the audio stream: `pause` and `resume`
-- [X] Create a queue of songs (supports different sources) and navigate within the queue: `~queue` and `~skipto`
+- [X] Pause and resume the audio stream: `~pause` and `~resume`
+- [X] Create a queue of songs (supports different sources) and navigate within the queue: `~queue`, `~next`, and `~skipto`
 - [X] Search YouTube and play the most relevant result for the query: `~search <query which can include spaces>`
 - [X] Stop playback completely: `~stop`
+- [X] Bonus command, given this was originally developed for the University of Michigan Discord server: `~hail` plays the Wolverines’ fight song!
 
 ## Roadmap
 I aim to add the following features over the next few versions:
@@ -78,6 +79,10 @@ I aim to add the following features over the next few versions:
 **Does the bot run forever?**
 
 No, the bot goes offline when you close Terminal or end the process on your system. You could host the bot on AWS or Heroku, following the same steps as above, instead. The bot can be kept online using the _forever_ module. Check out [this guide](https://shiffman.net/a2z/bot-ec2/) on the usage of AWS.
+
+**Why do I have to set everything up?**
+
+If I had access to the resources required to host this bot myself, I surely would have done so. Then, all server owners would have to do is click on s simple link to add this bot to their servers. Since I do not currently have a solution in mind for this, you will need to go through the slight hassle of setting this bot up (I promise it isn't _that_ hard :smile: ). Nonetheless, I hope you feel happpy using and contributing to an open-source solution! :)
 
 ## License
 MIT License 
