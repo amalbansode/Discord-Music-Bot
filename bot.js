@@ -35,6 +35,9 @@ client.on('message', async message => {
 
 	if (!!!message.member.voice.channel) {
 		return message.reply('**You have to be in a voice channel to control music playback!**').then(message => {message.delete({timeout: 5000})}).catch();
+	} else if (message.content.startsWith(`${prefix}help`)) {
+		help(message);
+		return;
 	} else if (message.content.startsWith(`${prefix}play`)) {
 		execute(message, serverQueue);
 		return;
@@ -140,6 +143,28 @@ async function execute(message, serverQueue) {
 		return message.reply(`${song.title} has been added to the queue! Duration: ${song.duration}`).then(message => {message.delete({timeout: 5000})}).catch();
 	}
 
+}
+
+function help(message) {
+	return message.reply(`Here's a short guide on using this Music Bot.
+
+	To control the bot, you will need to join a voice channel on this Discord server.
+	All commands that control this bot begin with a \`${prefix}\` character.
+	This bot is designed to stream audio from numerous sources, but works best with YouTube. 
+
+	Commands:
+	- \`~play <URL>\` Play audio from a supported source
+	- \`~pause\` Pause the audio stream
+	- \`~resume\` Resume the audio stream
+	- \`~queue\` Display the current queue of songs
+	- \`~next\` Skip to the next song in the queue
+	- \`~skipto <index number>\` Skip to a certain song in the queue, identified by its index number in the queue
+	- \`~search <query which can include spaces>\` Search YouTube and play the most relevant result for the query
+	- \`~stop\` Stop playback entirely, clears queue
+
+	This message will delete itself within a minute. 
+	Most messages from the bot, by default, also delete themselves after a few seconds to minimise junk in your messaging channels.
+		`).then(message => {message.delete({timeout: 60000})}).catch();
 }
 
 function next(message, serverQueue) {
